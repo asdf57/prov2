@@ -1,6 +1,5 @@
 from pydantic import BaseModel
-from typing import Literal, Annotated
-from functools import partial
+from typing import Literal
 
 from app.utils.droplet import DropletImage, DropletRegion, DropletSize
 

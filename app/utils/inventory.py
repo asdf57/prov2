@@ -93,6 +93,12 @@ class Inventory():
             self.inventory.add_group(group)
             self.inventory.add_host(host.name, group=group)
 
+        if host.hostvars:
+            logger.info(f"Adding hostvars for {host.name}...")
+            for key, value in host.hostvars.items():
+                if value is not None:
+                    entry.set_variable(key, value)
+
         logger.info(f"Host {host.name} added to the inventory")
 
     def remove_host(self, host_name: str) -> None:

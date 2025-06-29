@@ -26,23 +26,19 @@ class HostvarsManager:
         self.hostvars_path = Path(repo_path) / "hostvars.yml"
         self.repo.pull(branch="main")
 
-    def init(self, host: InventoryEntry):
+    def init(self, host_name: str, hostvars: HostvarsModel):
         """
         Create the branch and file for the host if it does not exist.
         """
-        branch_name = f"{host.name}"
+        branch_name = f"{host_name}"
         self.repo.pull(branch="main")
         if branch_name not in self.repo.repo.heads:
             self.repo.repo.create_head(branch_name)
             self.repo.repo.heads[branch_name].checkout()
             if not self.hostvars_path.exists():
-                if not HOST_TYPE_REGISTRY.get(host.type):
-                    raise ValueError(f"Type {host.type} is not a supported type!")
-
-                default_hostvars = HOST_TYPE_REGISTRY[host.type].get_default_hostvars()
                 with open(self.hostvars_path, "w") as f:
-                    yaml.safe_dump(default_hostvars.model_dump(), f, default_flow_style=False, allow_unicode=True)
-            self.repo.commit_and_push(f"Initialize hostvars for {host.name}", branch=branch_name)
+                    yaml.safe_dump(hostvars.model_dump(), f, default_flow_style=False, allow_unicode=True)
+            self.repo.commit_and_push(f"Initialize hostvars for {host_name}", branch=branch_name)
         else:
             self.repo.repo.heads[branch_name].checkout()
 
@@ -112,11 +108,6 @@ class HostvarsManager:
 
     def set(self, host: InventoryEntry, hostvars: HostvarsModel):
         """Set hostvars for a host entry."""
-        if not HOST_TYPE_REGISTRY.get(host.type):
-            raise ValueError(f"Type {host.type} is not a supported type!")
-
-        # Perform validation!
-        hostvars = HOST_TYPE_REGISTRY[host.type].get_hostvars_entry(hostvars.model_dump())
         hostvars_dict = hostvars.model_dump()
 
         logger.info(f"Setting hostvars for {host.name}: {hostvars_dict}")

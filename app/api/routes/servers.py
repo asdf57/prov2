@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends
+from app.models.entry import BUILDER_BY_TYPE, ServerEntryBuilder
 from app.models.inventory import InventoryUnion
 from app.resources import get_hostvars_manager, get_inventory_manager
 from app.utils.inventory_manager import InventoryManager
 
 router = APIRouter(prefix="/servers", tags=["servers"])
+
+
 
 @router.get("/{host_name}")
 def get_server(host_name: str, inventory_manager=Depends(get_inventory_manager), hostvars_manager=Depends(get_hostvars_manager)):
@@ -20,13 +23,17 @@ def get_server(host_name: str, inventory_manager=Depends(get_inventory_manager),
 def post_server(entry: InventoryUnion, hostvars_manager=Depends(get_hostvars_manager), inventory_manager=Depends(get_inventory_manager)):
     """
     Save the inventory to the repository.
-    """
-    inventory_manager.add_host(entry)
+    """    
 
-    # Init the hostvars
-    hostvars_manager.init(entry)
+    if not BUILDER_BY_TYPE.get(entry.type):
+        raise ValueError("Unsupported entry type")
 
-    return {"message": "Server created successfully!"}
+    creator = BUILDER_BY_TYPE[entry.type](entry)
+    inventory = creator.build_inventory()
+    hostvars = creator.build_server_hostvars()
+    inventory_manager.add_host(inventory)
+    hostvars_manager.init(entry.name, hostvars)
+    return {"message": f"{entry.name} of type {entry.type} was created successfully!"}
 
 @router.delete("/")
 def delete_server(host_name: str, inventory_manager=Depends(get_inventory_manager), hostvars_manager=Depends(get_hostvars_manager)):
