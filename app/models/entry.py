@@ -54,7 +54,7 @@ class EntryBuilder(ABC):
         pass
 
     @abstractmethod
-    def build_server_hostvars(self):
+    def build_hostvars(self):
         """Build the hostvars entry for a server."""
         pass
 
@@ -74,7 +74,7 @@ class ServerEntryBuilder(EntryBuilder):
             hostvars=self.entry.hostvars,
         )
 
-    def build_server_hostvars(self) -> ServerHostvarsModel:
+    def build_hostvars(self) -> ServerHostvarsModel:
         """Build the hostvars entry for a server."""
         return ServerHostvarsModel(
             state="initializing",
@@ -97,7 +97,7 @@ class DropletEntryBuilder(EntryBuilder):
             hostvars=self.entry.hostvars,
         )
 
-    def build_server_hostvars(self) -> DropletHostvarsModel:
+    def build_hostvars(self) -> DropletHostvarsModel:
         """Build the hostvars entry for a droplet."""
         return DropletHostvarsModel(
             state="initializing",

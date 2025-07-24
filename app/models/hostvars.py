@@ -1,4 +1,3 @@
-from git import Union
 from pydantic import BaseModel, Field, IPvAnyAddress
 from typing import Annotated, Literal, Optional
 
@@ -21,3 +20,9 @@ class DropletHostvarsModel(HostvarsModel):
     image: DropletImage
     region: DropletRegion
     size: DropletSize
+
+
+HOSTVARS_VALIDATOR = {
+    "server": ServerHostvarsModel,
+    "droplet": DropletHostvarsModel
+}

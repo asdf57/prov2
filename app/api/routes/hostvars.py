@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
+from typing import Union
+from fastapi import APIRouter, Depends, Body
 from app.models import *
-from app.models.hostvars import HostvarsModel
+from app.models.hostvars import HOSTVARS_VALIDATOR, ServerHostvarsModel, DropletHostvarsModel
 from app.resources import get_hostvars_manager, get_inventory_manager
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter(prefix="/hostvars", tags=["hostvars"])
 
@@ -16,10 +18,20 @@ def get_hostvars(host_name: str, hostvars_manager=Depends(get_hostvars_manager),
     return hostvars_manager.get(host_name)
 
 @router.post("/{host_name}")
-def post_hostvars(host_name: str, hostvars: HostvarsModel, hostvars_manager=Depends(get_hostvars_manager), inventory_manager=Depends(get_inventory_manager)):
+def post_hostvars(
+    host_name: str,
+    hostvars_preview: Union[ServerHostvarsModel, DropletHostvarsModel] = Body(..., embed=False),
+    hostvars_manager=Depends(get_hostvars_manager),
+    inventory_manager=Depends(get_inventory_manager)
+):
     """
     Save the host variables to the repository.
     """
     entry = inventory_manager.get_host(host_name)
+
+    hostvars_data = jsonable_encoder(hostvars_preview)
+
+    hostvars = HOSTVARS_VALIDATOR[entry.type].model_validate(hostvars_data)
+
     hostvars_manager.set(entry, hostvars)
     return {"message": "Host variables updated successfully!"}

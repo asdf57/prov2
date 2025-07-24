@@ -43,7 +43,6 @@ class Inventory():
 
         return None
 
-
     def get_all_hosts(self) -> list[InventoryEntry]:
         """
         Get all hosts in the inventory.
@@ -73,18 +72,12 @@ class Inventory():
         self.inventory.add_host(host.name, group="all", port=host.ansible_port)
         entry = self.inventory.get_host(host.name)
 
-        entry.set_variable("type", host.type)
-
-        if hasattr(host, "ip") and host.ip:
-            entry.set_variable("ansible_host", host.ip.exploded)
-
-        if hasattr(host, "ansible_user") and host.ansible_user:
-            entry.set_variable("ansible_user", host.ansible_user)
-        
-        if hasattr(host, "ansible_port") and host.ansible_port:
-            entry.set_variable("ansible_port", host.ansible_port)
+        for key, value in entry.get_hostvars().items():
+            if value is not None:
+                entry.set_variable(key, value)
 
         logger.info(f"Groups for host {host.name}: {host.groups}")
+
         for group in host.groups:
             logger.info(f"Adding host {host.name} to group {group}...")
             if group in ["all", "ungrouped", ""]:
@@ -93,11 +86,6 @@ class Inventory():
             self.inventory.add_group(group)
             self.inventory.add_host(host.name, group=group)
 
-        if host.hostvars:
-            logger.info(f"Adding hostvars for {host.name}...")
-            for key, value in host.hostvars.items():
-                if value is not None:
-                    entry.set_variable(key, value)
 
         logger.info(f"Host {host.name} added to the inventory")
 

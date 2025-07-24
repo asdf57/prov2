@@ -1,4 +1,5 @@
 
+from enum import Enum
 import os
 import logging
 from pathlib import Path
@@ -16,6 +17,13 @@ yaml.SafeDumper.add_representer(
     type(None),
     lambda dumper, value: dumper.represent_scalar(u'tag:yaml.org,2002:null', '')
 )
+
+def str_enum_representer(dumper, data):
+    if isinstance(data, Enum):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', str(data.value))
+    return dumper.represent_scalar('tag:yaml.org,2002:str', str(data))
+
+yaml.SafeDumper.add_multi_representer(Enum, str_enum_representer)
 
 class HostvarsManager:
     def __init__(self, repo_url: str, repo_path: Path):

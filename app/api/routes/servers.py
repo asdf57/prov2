@@ -30,7 +30,7 @@ def post_server(entry: InventoryUnion, hostvars_manager=Depends(get_hostvars_man
 
     creator = BUILDER_BY_TYPE[entry.type](entry)
     inventory = creator.build_inventory()
-    hostvars = creator.build_server_hostvars()
+    hostvars = creator.build_hostvars()
     inventory_manager.add_host(inventory)
     hostvars_manager.init(entry.name, hostvars)
     return {"message": f"{entry.name} of type {entry.type} was created successfully!"}

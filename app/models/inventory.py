@@ -28,6 +28,18 @@ class InventoryEntry(BaseModel):
         description="Additional Ansible host variables"
     )
 
+    def get_hostvars(self) -> dict:
+        d = {"type": self.type}
+        if self.ip:
+            d["ansible_host"] = self.ip.exploded
+        if self.ansible_user:
+            d["ansible_user"] = self.ansible_user
+        if self.ansible_port:
+            d["ansible_port"] = self.ansible_port
+        d.update(self.hostvars)
+        return d
+
+
 class ServerInventoryEntry(InventoryEntry):
     """Strict model for server entries that require direct IP connectivity."""
     type: Literal["server"]
