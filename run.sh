@@ -10,4 +10,4 @@ else
     docker rm rtest
 fi
 
-docker run -e SSH_KEY="$(cat ~/.ssh/git_provisioning_key)" --name rtest --rm -it -p 8000:8000 rtest:latest
+docker run -e SSH_KEY="$(cat ~/.ssh/git_provisioning_key)" --name rtest --rm -it -p 3000:3000 rtest:latest
