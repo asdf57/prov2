@@ -8,3 +8,8 @@ class StateModel(BaseModel):
         "provisioning",
         "provisioned",
     ] = "initializing"
+
+STATE_VALIDATOR = {
+    "server": StateModel,
+    "droplet": StateModel,
+}

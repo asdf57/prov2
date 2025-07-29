@@ -3,9 +3,9 @@ from ansible.inventory.manager import InventoryManager
 from ansible.parsing.dataloader import DataLoader
 from pathlib import Path
 
-from app.exceptions import HostAlreadyExistsException, HostNotFoundException, InvalidGroupException, NoGroupsException
+from app.exceptions import HostAlreadyExistsException, HostNotFoundException
 from app.models.entities import HOST_TYPE_REGISTRY
-from app.models.inventory import DropletInventoryEntry, InventoryEntry, ServerInventoryEntry
+from app.models.inventory import InventoryEntry
 from app.utils.sanitize import sanitize_data
 
 logging.basicConfig(level=logging.INFO)
@@ -19,29 +19,34 @@ class Inventory():
 
     def get_host(self, host_name: str) -> InventoryEntry:
         self.inventory.refresh_inventory()
-
         host = self.inventory.get_host(host_name)
         if not host:
             raise HostNotFoundException(f"Host {host_name} not found")
 
-        host_type = host.vars.get('type', None)
+
+        host_type = InventoryEntry.get_type_from_group(host.groups)
 
         entry_cls = HOST_TYPE_REGISTRY.get(host_type)
         if not entry_cls:
             raise ValueError(f"Unrecognized host type: {host_type}")
 
+        host.vars.pop("inventory_file", None)
+        host.vars.pop("inventory_dir", None)
+
         return entry_cls.get_inventory_entry(host)
 
-    def get_host_by_mac(self, mac: str) -> InventoryEntry | None:
+    def get_host_by_mac(self, mac: str) -> InventoryEntry:
         """
         Get a host entry from the inventory by its MAC address.
         """
         self.inventory.refresh_inventory()
         for host in self.inventory.get_hosts():
-            if host.vars.get("primary_mac", None) == mac:
-                return host
+            print(host.vars)
+            if host.vars.get("mac", None) == mac:
+                print(host.name)
+                return self.get_host(host.name)
 
-        return None
+        raise HostNotFoundException(f"Host with mac {mac} not found")
 
     def get_all_hosts(self) -> list[InventoryEntry]:
         """
@@ -72,7 +77,7 @@ class Inventory():
         self.inventory.add_host(host.name, group="all", port=host.ansible_port)
         entry = self.inventory.get_host(host.name)
 
-        for key, value in entry.get_hostvars().items():
+        for key, value in host.get_hostvars().items():
             if value is not None:
                 entry.set_variable(key, value)
 

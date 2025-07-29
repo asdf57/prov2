@@ -5,11 +5,11 @@ from app.resources import get_hostvars_manager, get_inventory_manager
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
 @router.get("/")
-def get_inventory(manager=Depends(get_inventory_manager)):
+def get_inventory(inventory_manager=Depends(get_inventory_manager)):
     """
-    Get host variables.
+    Get inventory
     """
-    return manager.get_inventory()
+    return inventory_manager.get_inventory()
 
 @router.delete("/")
 def delete_inventory(inventory_manager=Depends(get_inventory_manager)):
@@ -18,7 +18,7 @@ def delete_inventory(inventory_manager=Depends(get_inventory_manager)):
     """
     inventory_manager.clear_inventory()
     inventory_manager.save()
-    return {"message": "Inventory deleted"}
+    return {"info": "Inventory deleted"}
 
 @router.delete("/all")
 def delete_site(hostvars_manager=Depends(get_hostvars_manager), inventory_manager=Depends(get_inventory_manager)):
@@ -28,4 +28,4 @@ def delete_site(hostvars_manager=Depends(get_hostvars_manager), inventory_manage
     hostvars_manager.delete_all()
     inventory_manager.clear_inventory()
     inventory_manager.save()
-    return {"message": "Site deleted"}
+    return {"info": "Site deleted"}

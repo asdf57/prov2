@@ -9,7 +9,6 @@ VALID_FS_TYPES = Literal[
     "swap", "efi"
 ]
 VALID_FLAGS = Literal["boot", "esp", "swap", "raid", "lvm", "noauto", "hidden"]
-
 VALID_ALLOCATORS = Literal[
     "percentage", "size"
 ]
@@ -79,3 +78,7 @@ class StorageModel(BaseModel):
             raise ValueError(f"Total percentage of partition(s) exceeds 100%: {percentage_sum}")
 
         return self
+
+STORAGE_VALIDATOR = {
+    "server": StorageModel
+}

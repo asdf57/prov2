@@ -1,8 +1,8 @@
 from typing import Annotated, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic.networks import IPvAnyAddress
-from ansible.inventory.host import Host
 
+from app.exceptions import InvalidTypeException
 
 class InventoryEntry(BaseModel):
     """Base model for any Ansible inventory host entry."""
@@ -29,21 +29,53 @@ class InventoryEntry(BaseModel):
     )
 
     def get_hostvars(self) -> dict:
-        d = {"type": self.type}
+        d = {}
         if self.ip:
             d["ansible_host"] = self.ip.exploded
         if self.ansible_user:
             d["ansible_user"] = self.ansible_user
         if self.ansible_port:
             d["ansible_port"] = self.ansible_port
-        d.update(self.hostvars)
-        return d
+        if self.mac:
+            d["mac"] = self.mac
 
+        d.update(self.hostvars)
+
+        # Must remove - a byproduct of using discriminated unions in Pydantic
+        d.pop("type", None)
+        return d
+    
+    def get_type(self) -> str:
+        if "servers" in self.groups:
+            return "server"
+        elif "droplets" in self.groups:
+            return "droplet"
+        else:
+            raise InvalidTypeException
+
+    @staticmethod
+    def get_type_from_group(groups) -> str:
+        """Determine the type based on the groups."""
+        found = None
+
+        for group in groups:
+            if str(group) == "servers":
+                found = "server"
+            elif str(group) == "droplets":
+                found = "droplet"
+
+        if not found:
+            raise InvalidTypeException("Unrecognized group for inventory entry type.")
+
+        return found
 
 class ServerInventoryEntry(InventoryEntry):
     """Strict model for server entries that require direct IP connectivity."""
     type: Literal["server"]
     ip: IPvAnyAddress = Field(..., description="Required IP address for the server")
+    mac: str = Field(
+        ..., description="Primary MAC address of the server"
+    )
 
     @field_validator("groups", mode="before")
     def ensure_servers_group(cls, v):

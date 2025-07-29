@@ -9,3 +9,8 @@ class UserModel(BaseModel):
         default_factory=list,
         description="Groups the user belongs to"
     )
+
+USER_VALIDATOR = {
+    "server": UserModel,
+    "droplet": UserModel,
+}

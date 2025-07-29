@@ -1,14 +1,9 @@
-
-
 from abc import ABC, abstractmethod
 from typing import Type
 from app.models.hostvars import DropletHostvarsModel, HostvarsModel, ServerHostvarsModel
 from app.models.inventory import DropletInventoryEntry, InventoryEntry, ServerInventoryEntry
-
-from ansible.inventory.host import Host
-
 from app.utils.sanitize import sanitize_data
-
+from ansible.inventory.host import Host
 
 class HostTypeRegistryEntry(ABC):
     def __init__(self, inventory_model: Type[InventoryEntry], hostvars_model: Type[HostvarsModel]):
@@ -35,6 +30,7 @@ class ServerRegistryEntry(HostTypeRegistryEntry):
         return self.inventory_model(
             type="server",
             name=host.name,
+            mac=vars.get("mac"),
             ip=vars.get("ansible_host"),
             ansible_user=vars.get("ansible_user", "root"),
             ansible_port=vars.get("ansible_port", 22),

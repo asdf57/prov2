@@ -3,15 +3,19 @@ from typing import Literal
 
 from app.utils.droplet import DropletImage, DropletRegion, DropletSize
 
-class GeneralSystemModel(BaseModel):
+class SystemModel(BaseModel):
     pass
 
-class ServerSystemModel(GeneralSystemModel):
+class ServerSystemModel(SystemModel):
     os: Literal["arch", "debian"]
-    mac: str
     node_type: Literal["coord", "infra", "worker"]
 
-class DropletSystemModel(GeneralSystemModel):
+class DropletSystemModel(SystemModel):
     image: DropletImage
     region: DropletRegion
     size: DropletSize
+
+SYSTEM_VALIDATOR = {
+    "server": ServerSystemModel,
+    "droplet": DropletSystemModel,
+}

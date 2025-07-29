@@ -15,10 +15,20 @@ class InvalidGroupException(InventoryException):
     """Raised when a host doesn't belong to recognized groups"""
     status_code = 400
 
+class InvalidTypeException(InventoryException):
+    """Raised when a host doesn't belong to recognized groups"""
+    status_code = 400
+
 class HostAlreadyExistsException(InventoryException):
     """Raised when trying to add a host that already exists in inventory"""
     status_code = 409
 
+class HostvarsException(Exception):
+    """Base exception for all hostvars operations"""
+
+class HostvarsNotFoundException(HostvarsException):
+    """Raised when hostvars are not found"""
+    status_code = 404
 
 class GitException(Exception):
     """Base exception for Git operations"""
@@ -34,6 +44,10 @@ class GitInitException(GitException):
 
 class GitPullException(GitException):
     """Raised when there is an error pulling changes from a Git repository"""
+    status_code = 500
+
+class GitCommitException(GitException):
+    """Raised when there is an error committing changes to a Git repository"""
     status_code = 500
 
 class GitPushException(GitException):
