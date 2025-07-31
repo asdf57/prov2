@@ -14,7 +14,7 @@ def get_user(host_name: str, inventory_manager=Depends(get_inventory_manager), h
     inventory_manager.get_host(host_name)
     hostvars = hostvars_manager.get(host_name)
 
-    if "user" not in hostvars:
+    if "users" not in hostvars:
         return JSONResponse(
             status_code=200,
             content={"info": f"No user data found for {host_name}"}
