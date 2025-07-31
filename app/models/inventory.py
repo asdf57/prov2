@@ -36,7 +36,7 @@ class InventoryEntry(BaseModel):
             d["ansible_user"] = self.ansible_user
         if self.ansible_port:
             d["ansible_port"] = self.ansible_port
-        if self.mac:
+        if hasattr(self, "mac"):
             d["mac"] = self.mac
 
         d.update(self.hostvars)
