@@ -38,7 +38,7 @@ class HostvarsManager:
         Create the branch and file for the host if it does not exist.
         """
         branch_name = f"{host_name}"
-        self.repo.checkout_and_pull(branch=host_name)
+        self.repo.checkout_and_pull(branch=host_name, create_if_missing=True)
         if not self.hostvars_path.exists():
             with open(self.hostvars_path, "w") as f:
                 yaml.safe_dump(hostvars.model_dump(), f, default_flow_style=False, allow_unicode=True)
