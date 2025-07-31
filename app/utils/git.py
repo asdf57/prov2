@@ -50,11 +50,13 @@ class RepoHandler:
             if branch not in self.repo.branches and create_if_missing:
                 logger.info(f"Branch {branch} does not exist, creating it.")
                 self.repo.git.checkout("-b", branch)
+                if branch not in self.repo.remotes.origin.refs:
+                    self.repo.git.push("--set-upstream", "origin", branch)
             else:
                 logger.info(f"Checking out branch {branch}.")
                 self.repo.git.checkout(branch)
+                self.repo.remotes.origin.pull(branch)
 
-            self.repo.remotes.origin.pull(branch)
             logger.info(f"Checked out and pulled branch {branch}.")
         except Exception as e:
             logger.error(f"Failed to checkout and pull branch {branch}: {e}")
