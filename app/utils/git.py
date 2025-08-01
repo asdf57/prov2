@@ -47,6 +47,7 @@ class RepoHandler:
         Pull the latest changes from the remote repository.
         """
         try:
+            self.fetch()
             if branch not in self.repo.branches and create_if_missing:
                 logger.info(f"Branch {branch} does not exist, creating it.")
                 self.repo.git.checkout("-b", branch)
