@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from git import InvalidGitRepositoryError, Repo
 
@@ -43,9 +44,6 @@ class RepoHandler:
             raise GitPullException("Failed to fetch changes from the remote repository.") from e
 
     def checkout_and_pull(self, branch: str = "main", create_if_missing: bool = False):
-        """
-        Pull the latest changes from the remote repository.
-        """
         try:
             self.fetch()
             if branch not in self.repo.branches and create_if_missing:
@@ -54,7 +52,11 @@ class RepoHandler:
             else:
                 logger.info(f"Checking out branch {branch}.")
                 self.repo.git.checkout(branch)
-                self.repo.remotes.origin.pull(branch)
+                # Only pull if remote branch exists
+                if branch in self.repo.remotes.origin.refs:
+                    self.repo.remotes.origin.pull(branch)
+                else:
+                    logger.info(f"No remote branch '{branch}' exists, skipping pull.")
 
             # Always ensure we have a remote tracking branch
             if branch not in self.repo.remotes.origin.refs:
@@ -93,18 +95,30 @@ class RepoHandler:
             logger.error(f"Failed to commit changes: {e}")
             raise GitCommitException("Failed to commit changes to the repository.") from e
     
-    def delete_branch_entirely(self, branch: str = "main"):
+    def delete_branch_entirely(self, branch: str = "main", purge_files: list[str] = None):
+        if purge_files is None:
+            purge_files = []
+
+        # First check if the local branch exists and delete the specified files in it
+        if branch in [b.name for b in self.repo.heads]:
+            self.checkout_and_pull(branch=branch)
+            for file in purge_files:
+                os.remove(self.repo_path / file)
+
+            self.commit_and_push("Deleted files", branch=branch)
+
+        # Now switch back to main
         self.checkout_and_pull(branch="main")
 
-        logger.info(f"Deleting local branch {branch}")
-        if branch in [b.name for b in self.repo.repo.heads]:
+        # Delete the local branch (if it exists)
+        if branch in [b.name for b in self.repo.heads]:
+            logger.info(f"Deleting local branch {branch}")
             self.repo.delete_head(branch, force=True)
 
-        try:
+        # Delete the remote branch if it exists
+        if branch in [ref.remote_head for ref in self.repo.remotes.origin.refs]:
             logger.info(f"Deleting remote branch {branch}")
             self.repo.git.push("origin", "--delete", branch)
-        except Exception as e:
-            logger.error(f"Failed to delete remote branch {branch}: {e}")
 
     def get_remote_branches(self, excluded_branches: list = []):
         remote_refs = self.repo.remotes.origin.refs

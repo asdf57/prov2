@@ -48,16 +48,9 @@ class HostvarsManager:
         """
         Delete the branch and file for the host.
         """
-        self.repo.checkout_and_pull(branch=host_name)
-
         logger.info(f"Deleting hostvars for {host_name}...")
-
-        # Remove the file
-        os.remove(self.repo_path / "hostvars.yml")
-        self.repo.commit_and_push(f"Deleting hostvars for {host_name}", branch=host_name)
-
         # Remove the host's branch in Git
-        self.repo.delete_branch_entirely(branch=host_name)
+        self.repo.delete_branch_entirely(branch=host_name, purge_files=["hostvars.yml"])
 
 
     def delete_all(self):
