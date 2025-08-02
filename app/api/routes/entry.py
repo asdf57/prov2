@@ -31,7 +31,7 @@ def post_entry(entry: EntryUnion, hostvars_manager=Depends(get_hostvars_manager)
     hostvars_manager.init(entry.name, hostvars)
     return {"info": f"{entry.name} of type {entry.type} was created successfully!"}
 
-@router.delete("/")
+@router.delete("/{host_name}")
 def delete_entry(host_name: str, inventory_manager=Depends(get_inventory_manager), hostvars_manager=Depends(get_hostvars_manager)):
     """
     Delete an entry
