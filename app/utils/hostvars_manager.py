@@ -39,9 +39,8 @@ class HostvarsManager:
         """
         branch_name = f"{host_name}"
         self.repo.checkout_and_pull(branch=host_name, create_if_missing=True)
-        if not self.hostvars_path.exists():
-            with open(self.hostvars_path, "w") as f:
-                yaml.safe_dump(hostvars.model_dump(), f, default_flow_style=False, allow_unicode=True)
+        with open(self.hostvars_path, "w") as f:
+            yaml.safe_dump(hostvars.model_dump(), f, default_flow_style=False, allow_unicode=True)
 
         self.repo.commit_and_push(f"Initialize hostvars for {host_name}", branch=branch_name)
 
@@ -97,6 +96,15 @@ class HostvarsManager:
             except Exception as e:
                 logger.error(f"Failed to delete remote branch {branch}: {e}")
 
+
+        # Delete any remote branch stragglers
+        remote_branches = self.repo.get_remote_branches(excluded_branches=["main"])
+        for branch in remote_branches:
+            try:
+                logger.info(f"Deleting remote branch straggler: {branch}")
+                self.repo.repo.git.push("origin", "--delete", branch)
+            except Exception as e:
+                logger.error(f"Failed to delete remote branch {branch}: {e}")
 
     def get(self, host_name: str):
         self.repo.checkout_and_pull(branch=host_name)

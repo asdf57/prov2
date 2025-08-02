@@ -105,3 +105,7 @@ class RepoHandler:
             self.repo.git.push("origin", "--delete", branch)
         except Exception as e:
             logger.error(f"Failed to delete remote branch {branch}: {e}")
+
+    def get_remote_branches(self, excluded_branches: list = []):
+        remote_refs = self.repo.remotes.origin.refs
+        return [ref.remote_head for ref in remote_refs if ref.remote_head not in excluded_branches]
