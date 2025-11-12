@@ -9,7 +9,8 @@ from app.api.routes import (
     storage,
     system,
     ipxe,
-    user
+    user,
+    actions,
 )
 
 api_router = APIRouter()
@@ -22,3 +23,4 @@ api_router.include_router(storage.router)
 api_router.include_router(system.router)
 api_router.include_router(ipxe.router)
 api_router.include_router(user.router)
+api_router.include_router(actions.router)

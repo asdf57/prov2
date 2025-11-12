@@ -10,4 +10,18 @@ else
     docker rm rtest
 fi
 
-docker run -e SSH_KEY="$(cat ~/.ssh/git_provisioning_key)" --name rtest --rm -it -p 3000:3000 rtest:latest
+docker run \
+    -e SSH_KEY="$(cat ~/.ssh/git_provisioning_key)" \
+    -e CONCOURSE_URL="${CONCOURSE_URL}" \
+    -e CONCOURSE_USERNAME="${CONCOURSE_USERNAME}" \
+    -e CONCOURSE_PASSWORD="${CONCOURSE_PASSWORD}" \
+    -e CONCOURSE_TEAM="${CONCOURSE_TEAM}" \
+    -e CONCOURSE_COMMANDS_PIPELINE="${CONCOURSE_COMMANDS_PIPELINE}" \
+    -e CONCOURSE_COMMANDS_FILE="${CONCOURSE_COMMANDS_FILE}" \
+    -e CONCOURSE_OAUTH_CLIENT_ID="${CONCOURSE_OAUTH_CLIENT_ID}" \
+    -e CONCOURSE_OAUTH_CLIENT_SECRET="${CONCOURSE_OAUTH_CLIENT_SECRET}" \
+    --name rtest \
+    --rm \
+    -it \
+    -p 3000:3000 \
+    rtest:latest
