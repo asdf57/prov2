@@ -8,7 +8,7 @@ from app.config import (
     CONCOURSE_PASSWORD,
     CONCOURSE_TEAM,
     CONCOURSE_COMMANDS_PIPELINE,
-    CONCOURSE_COMMANDS_FILE
+    CONCOURSE_COMMANDS_RESOURCE,
 )
 
 inventory_manager = InventoryManager("git@github.com:asdf57/inventory.git", "/app/inventory")
@@ -35,7 +35,7 @@ def get_concourse_manager() -> ConcourseManager:
 commands_manager = CommandsManager(
     CONCOURSE_TEAM,
     CONCOURSE_COMMANDS_PIPELINE,
-    CONCOURSE_COMMANDS_FILE,
+    CONCOURSE_COMMANDS_RESOURCE,
     "git@github.com:asdf57/commands_data.git",
     "/app/commands_data",
     concourse_manager

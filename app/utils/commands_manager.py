@@ -4,10 +4,10 @@ from app.utils.git import RepoHandler
 
 
 class CommandsManager:
-    def __init__(self, concourse_team: str, concourse_commands_pipeline: str, concourse_commands_file: str, repo_url: str, repo_path: Path, concourse_manager: ConcourseManager):
+    def __init__(self, concourse_team: str, concourse_commands_pipeline: str, commands_resource: str, repo_url: str, repo_path: Path, concourse_manager: ConcourseManager):
         self.concourse_team = concourse_team
         self.concourse_commands_pipeline = concourse_commands_pipeline
-        self.concourse_commands_file = concourse_commands_file
+        self.commands_resource = commands_resource
         self.repo_url = repo_url
         self.repo_path = Path(repo_path)
         self.repo = RepoHandler(repo_url, self.repo_path)
@@ -28,5 +28,5 @@ class CommandsManager:
         self.concourse_manager.trigger_resource_check(
             self.concourse_team,
             self.concourse_commands_pipeline,
-            self.concourse_commands_file
+            self.commands_resource
         )
