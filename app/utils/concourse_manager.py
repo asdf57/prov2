@@ -9,7 +9,7 @@ from typing import Optional
 from app.utils.git import RepoHandler
 
 
-CONCOURSE_USERNAME = os.getenv("CONCOURSE_USERNAME")
+CONCOURSE_USER = os.getenv("CONCOURSE_USER")
 CONCOURSE_PASSWORD = os.getenv("CONCOURSE_PASSWORD")
 
 CONCOURSE_OAUTH_CLIENT_ID = os.getenv("CONCOURSE_OAUTH_CLIENT_ID")
@@ -22,9 +22,9 @@ CONCOURSE_URL = os.getenv("CONCOURSE_URL")
 Get OAuth token that auto refreshes
 """
 class ConcourseManager:
-    def __init__(self, concourse_url: str, concourse_username: str, concourse_password: str):
+    def __init__(self, concourse_url: str, concourse_user: str, concourse_password: str):
         self.concourse_url = concourse_url
-        self.concourse_username = concourse_username
+        self.concourse_user = concourse_user
         self.concourse_password = concourse_password
 
         self._access_token: Optional[str] = None
@@ -44,7 +44,7 @@ class ConcourseManager:
 
         data = {
             "grant_type": "password",
-            "username": self.concourse_username,
+            "username": self.concourse_user,
             "password": self.concourse_password,
             "scope": "openid profile email federated:id groups"
         }
@@ -84,4 +84,25 @@ class ConcourseManager:
         response = requests.post(url, headers=headers, json={})
         response.raise_for_status()
         
+        return response.json()
+
+    def trigger_job(self, team: str, pipeline: str, job: str) -> dict:
+        """
+        Trigger a job in Concourse.
+
+        Example usage:
+            manager.trigger_job("main", "commands", "commands")
+        """
+        token = self.get_token()
+
+        url = f"{self.concourse_url}/api/v1/teams/{team}/pipelines/{pipeline}/jobs/{job}/builds"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+
+        response = requests.post(url, headers=headers, json={})
+        response.raise_for_status()
+
         return response.json()

@@ -7,7 +7,7 @@ def get_env_var_or_bust(var_name: str) -> str:
     return value
 
 CONCOURSE_URL = get_env_var_or_bust("CONCOURSE_URL")
-CONCOURSE_USERNAME = get_env_var_or_bust("CONCOURSE_USERNAME")
+CONCOURSE_USER = get_env_var_or_bust("CONCOURSE_USER")
 CONCOURSE_PASSWORD = get_env_var_or_bust("CONCOURSE_PASSWORD")
 CONCOURSE_TEAM = get_env_var_or_bust("CONCOURSE_TEAM")
 CONCOURSE_COMMANDS_PIPELINE = get_env_var_or_bust("CONCOURSE_COMMANDS_PIPELINE")

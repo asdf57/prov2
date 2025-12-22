@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 docker build -t rtest:latest .
 
 if [ -z "$(docker ps -q -f name=rtest)" ]; then
@@ -12,8 +14,8 @@ fi
 
 docker run \
     -e SSH_KEY="$(cat ~/.ssh/git_provisioning_key)" \
-    -e CONCOURSE_URL="${CONCOURSE_URL}" \
-    -e CONCOURSE_USERNAME="${CONCOURSE_USERNAME}" \
+    -e CONCOURSE_URL="${CONCOURSE_URL:-https://ci.ryuugu.dev}" \
+    -e CONCOURSE_USER="${CONCOURSE_USER}" \
     -e CONCOURSE_PASSWORD="${CONCOURSE_PASSWORD}" \
     -e CONCOURSE_TEAM="${CONCOURSE_TEAM}" \
     -e CONCOURSE_COMMANDS_PIPELINE="${CONCOURSE_COMMANDS_PIPELINE}" \

@@ -11,6 +11,8 @@ from app.api.routes import (
     ipxe,
     user,
     actions,
+    node,
+    power,
 )
 
 api_router = APIRouter()
@@ -24,3 +26,5 @@ api_router.include_router(system.router)
 api_router.include_router(ipxe.router)
 api_router.include_router(user.router)
 api_router.include_router(actions.router)
+api_router.include_router(node.router)
+api_router.include_router(power.router)

@@ -46,21 +46,33 @@ class RepoHandler:
     def checkout_and_pull(self, branch: str = "main", create_if_missing: bool = False):
         try:
             self.fetch()
-            if branch not in self.repo.branches and create_if_missing:
-                logger.info(f"Branch {branch} does not exist, creating it.")
-                self.repo.git.checkout("-b", branch)
+
+            # Check if branch exists locally
+            local_branch_exists = branch in [b.name for b in self.repo.heads]
+            # Check if branch exists remotely
+            remote_branch_exists = f"origin/{branch}" in [str(ref) for ref in self.repo.remotes.origin.refs]
+
+            if not local_branch_exists and create_if_missing:
+                if remote_branch_exists:
+                    # Remote branch exists - create local tracking branch from it
+                    logger.info(f"Branch {branch} exists remotely. Creating local tracking branch.")
+                    self.repo.git.checkout("-b", branch, f"origin/{branch}")
+                else:
+                    # Neither exists - create new branch
+                    logger.info(f"Branch {branch} does not exist locally or remotely, creating new branch.")
+                    self.repo.git.checkout("-b", branch)
+                    # Push to create remote tracking branch
+                    self.repo.git.push("--set-upstream", "origin", branch)
             else:
+                # Branch exists locally, just check it out
                 logger.info(f"Checking out branch {branch}.")
                 self.repo.git.checkout(branch)
-                # Only pull if remote branch exists
-                if branch in self.repo.remotes.origin.refs:
+
+                # Pull if remote exists
+                if remote_branch_exists:
                     self.repo.remotes.origin.pull(branch)
                 else:
                     logger.info(f"No remote branch '{branch}' exists, skipping pull.")
-
-            # Always ensure we have a remote tracking branch
-            if branch not in self.repo.remotes.origin.refs:
-                self.repo.git.push("--set-upstream", "origin", branch)
 
             logger.info(f"Checked out and pulled branch {branch}.")
         except Exception as e:

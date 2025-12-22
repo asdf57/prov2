@@ -16,6 +16,13 @@ def get_entry(host_name: str, inventory_manager=Depends(get_inventory_manager), 
     host['hostvars'].update(**hostvars)
     return host
 
+@router.get("/")
+def get_entry(inventory_manager=Depends(get_inventory_manager), hostvars_manager=Depends(get_hostvars_manager)):
+    """
+    Get all entries
+    """
+    return inventory_manager.get_all_hosts()
+
 @router.post("/")
 def post_entry(entry: EntryUnion, hostvars_manager=Depends(get_hostvars_manager), inventory_manager=Depends(get_inventory_manager)):
     """

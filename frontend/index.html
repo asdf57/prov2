@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure Management</title>
+    <style>
+    .node-card {
+        background: #2a2a2a;
+        padding: 20px;
+        margin: 10px;
+        border-radius: 8px;
+        color: white;
+    }
+    .command-input {
+        width: 100%;
+        display: block;
+        margin-bottom: 5px;
+        padding: 8px;
+        background: #1a1a1a;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        font-family: monospace;
+        resize: vertical;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Infrastructure Management</h1>
+        
+        <div class="controls">
+            <input 
+                type="text"
+                id="apiUrl"
+                class="api-url-input"
+                value="https://server-api.ryuugu.dev:3000"
+                placeholder="API Base URL"
+            >
+            <button onclick="loadNodes()">Refresh</button>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading">Loading nodes...</div>
+        <div id="nodes" class="nodes-grid"></div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Details</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const RebootType = {
+            NORMAL: 'normal',
+            HARD: 'hard',
+            IPXE: 'ipxe'
+        };
+
+        const PowerType = {
+            ON: 'on',
+            OFF: 'off',
+            CYCLE: 'cycle'
+        };
+
+        const ContentType = {
+            JSON: 'application/json',
+            TEXT: 'text/plain'
+        };
+
+        const API_BASE = () => document.getElementById('apiUrl').value;
+
+        async function apiCall(endpoint, method = 'GET', body = null, contentType = ContentType.JSON) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': contentType.toString(),
+                    }
+                };
+                
+                if (body && contentType === ContentType.JSON) {
+                    options.body = JSON.stringify(body);
+                } else if (body && contentType === ContentType.TEXT) {
+                    options.body = body;
+                }
+
+                const response = await fetch(`${API_BASE()}${endpoint}`, options);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                return data;
+            } catch (error) {
+                showError(`API Error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        function postReboot(nodeName, rebootType) {
+            apiCall(`/node/reboot/${rebootType}`, 'POST', { node: nodeName })
+                .then(() => console.log(`Reboot command sent to ${nodeName} (${rebootType})`))
+                .catch(err => console.error(err));
+        }
+
+        function postPower(nodeName, powerType) {
+            apiCall(`/power/${powerType}`, 'POST', { node: nodeName })
+                .then(() => console.log(`Power command sent to ${nodeName} (${powerType})`))
+                .catch(err => console.error(err));
+        }
+
+        function postCommand(nodeName) {
+            const user = document.getElementById(`user-${nodeName}`).value || 'root';
+            const commandTextarea = document.getElementById(`command-${nodeName}`);
+            const command = commandTextarea.value;
+
+            apiCall(`/actions/command/${nodeName}?user=${user}`, 'POST', command, ContentType.TEXT)
+                .then(() => {
+                    console.log(`Command sent to ${nodeName}: ${command}`);
+                    commandTextarea.value = '';
+                })
+                .catch(err => console.error(err));
+        }
+
+        function provision(nodeName) {
+            const wipeCheckbox = document.getElementById(`provision-wipe-${nodeName}`);
+            const shouldWipe = wipeCheckbox.checked;
+
+            apiCall('/node/provision', 'POST', { node: nodeName, wipe: shouldWipe })
+                .then(() => console.log(`Provision command sent to ${nodeName} (wipe: ${shouldWipe})`))
+                .catch(err => console.error(err));
+        }
+
+        function createNodeCard(nodeName) {
+            const card = document.createElement('div');
+            card.className = 'node-card';
+            card.innerHTML = `
+                <h3>${nodeName}</h3>
+                <button onclick="showNodeDetails('${nodeName}')">View Details</button>
+                <button onclick="postReboot('${nodeName}', '${RebootType.NORMAL}')">Reboot</button>
+                <button onclick="postReboot('${nodeName}', '${RebootType.HARD}')">Reboot (hard)</button>
+                <button onclick="postReboot('${nodeName}', '${RebootType.IPXE}')">Reboot (iPXE)</button>
+                <button onclick="postPower('${nodeName}', '${PowerType.ON}')">Power on</button>
+                <button onclick="postPower('${nodeName}', '${PowerType.OFF}')">Power off</button>
+                <button onclick="postPower('${nodeName}', '${PowerType.CYCLE}')">Cycle power</button>
+                <div id="provision-${nodeName}">
+                    <button onclick="provision('${nodeName}')">Provision</button>
+                    <label>
+                        <input type="checkbox" id="provision-wipe-${nodeName}">
+                        Wipe
+                    </label>
+                </div>
+                <div>
+                    <input type="text" id="user-${nodeName}" placeholder="Username (default: root)" value="root">
+                    <textarea id="command-${nodeName}" 
+                            class="command-input" 
+                            placeholder="Enter command..." 
+                            rows="4"></textarea>
+                    <button onclick="postCommand('${nodeName}')">Send Command</button>
+                </div>
+            `;
+            return card;
+        }
+
+        async function loadNodes() {
+            const loadingDiv = document.getElementById('loading');
+            const nodesDiv = document.getElementById('nodes');
+            
+            loadingDiv.style.display = 'block';
+            nodesDiv.innerHTML = '';
+
+            try {
+                const data = await apiCall('/inventory/');
+                loadingDiv.style.display = 'none';
+
+                const nodeNames = Object.keys(data.all.hosts);
+
+                console.log('Node names:', nodeNames);
+
+                if (!nodeNames || nodeNames.length === 0) {
+                    nodesDiv.innerHTML = '<p class="loading">No nodes found</p>';
+                    return;
+                }
+
+                nodeNames.forEach(node => {
+                    nodesDiv.appendChild(createNodeCard(node));
+                });
+            } catch (error) {
+                console.error('Error loading nodes:', error);
+                loadingDiv.style.display = 'none';
+                nodesDiv.innerHTML = '<p class="loading">Failed to load nodes</p>';
+            }
+        }
+
+        // Load nodes on page load
+        window.addEventListener('DOMContentLoaded', loadNodes);
+    </script>
+</body>
+</html>
