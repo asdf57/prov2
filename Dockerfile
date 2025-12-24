@@ -34,6 +34,8 @@ COPY ./pyproject.toml ./uv.lock /app/
 
 COPY ./app /app/app
 
+COPY ./frontend /app/frontend
+
 COPY ./entrypoint.sh /app/entrypoint.sh
 
 # Sync the project

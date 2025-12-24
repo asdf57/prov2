@@ -26,4 +26,5 @@ docker run \
     --rm \
     -it \
     -p 3000:3000 \
+    -p 8000:8000 \
     rtest:latest
